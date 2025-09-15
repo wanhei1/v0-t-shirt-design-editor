@@ -56,13 +56,31 @@ const styleConfigs: Record<string, {
 }
 
 async function generateWithComfyUI(prompt: string, style: string): Promise<string> {
+  // 环境检测和服务器配置
+  const isProduction = process.env.NODE_ENV === 'production'
   const serverUrl = process.env.COMFYUI_URL ? `http://${process.env.COMFYUI_URL}` : "http://127.0.0.1:8188"
+  
+  console.log(`环境: ${isProduction ? '生产环境' : '开发环境'}`)
+  console.log(`ComfyUI 服务器地址: ${serverUrl}`)
+  
   const client = new SimpleComfyUIClient(serverUrl)
 
   // 检查连接
-  const isConnected = await client.checkConnection()
-  if (!isConnected) {
-    throw new Error("无法连接到 ComfyUI 服务器")
+  try {
+    const isConnected = await client.checkConnection()
+    if (!isConnected) {
+      throw new Error(`无法连接到 ComfyUI 服务器 (${serverUrl})`)
+    }
+    console.log(`✓ 成功连接到 ComfyUI 服务器`)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "未知连接错误"
+    console.error(`✗ ComfyUI 连接失败: ${errorMessage}`)
+    
+    if (isProduction) {
+      throw new Error(`生产环境 ComfyUI 服务不可用。请检查环境变量 COMFYUI_URL 是否正确配置为可公网访问的地址。当前配置: ${serverUrl}`)
+    } else {
+      throw new Error(`本地 ComfyUI 服务不可用。请确保 ComfyUI 在 ${serverUrl} 正常运行`)
+    }
   }
 
   // 构建提示词（根据风格调整）
@@ -154,19 +172,29 @@ export async function POST(request: NextRequest) {
 // 添加健康检查端点
 export async function GET() {
   try {
+    const isProduction = process.env.NODE_ENV === 'production'
     const serverUrl = process.env.COMFYUI_URL ? `http://${process.env.COMFYUI_URL}` : "http://127.0.0.1:8188"
     const client = new SimpleComfyUIClient(serverUrl)
+    
+    console.log(`健康检查 - 环境: ${isProduction ? '生产' : '开发'}, 服务器: ${serverUrl}`)
+    
     const isAvailable = await client.checkConnection()
 
     return NextResponse.json({
       status: "ok",
+      environment: isProduction ? 'production' : 'development',
       comfyUIAvailable: isAvailable,
       serverAddress: serverUrl,
-      message: isAvailable ? "ComfyUI 连接正常" : "ComfyUI 不可用，使用占位符模式"
+      message: isAvailable 
+        ? "ComfyUI 连接正常" 
+        : isProduction 
+          ? "ComfyUI 不可用 - 请检查生产环境配置" 
+          : "ComfyUI 不可用 - 请检查本地服务"
     })
   } catch (error) {
     return NextResponse.json({
       status: "error",
+      environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
       comfyUIAvailable: false,
       error: error instanceof Error ? error.message : "未知错误",
       message: "ComfyUI 连接检查失败"
