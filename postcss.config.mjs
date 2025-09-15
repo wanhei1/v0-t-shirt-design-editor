@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /** @type {import('postcss-load-config').Config} */
 const config = {
   plugins: {
@@ -6,3 +7,11 @@ const config = {
 }
 
 export default config
+=======
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+  },
+}
+>>>>>>> 0954e09 (初始化项目或更新项目)

@@ -1,5 +1,8 @@
 @import "tailwindcss";
+<<<<<<< HEAD
 @import "tw-animate-css";
+=======
+>>>>>>> 0954e09 (初始化项目或更新项目)
 
 @custom-variant dark (&:is(.dark *));
 
