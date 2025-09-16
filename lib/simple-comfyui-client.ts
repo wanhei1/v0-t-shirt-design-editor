@@ -222,12 +222,18 @@ export class SimpleComfyUIClient {
    */
   async checkConnection(): Promise<boolean> {
     try {
+      console.log(`尝试连接到: ${this.serverUrl}/queue`)
       const response = await fetch(`${this.serverUrl}/queue`, {
         method: 'GET',
-        signal: AbortSignal.timeout(5000)
+        headers: {
+          'User-Agent': 'CustomTshirtDesigner/1.0'
+        },
+        signal: AbortSignal.timeout(10000) // 增加超时时间到10秒
       })
+      console.log(`连接响应状态: ${response.status}`)
       return response.ok
-    } catch {
+    } catch (error) {
+      console.error(`连接错误详情:`, error)
       return false
     }
   }

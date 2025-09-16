@@ -58,7 +58,7 @@ const styleConfigs: Record<string, {
 async function generateWithComfyUI(prompt: string, style: string): Promise<string> {
   // 环境检测和服务器配置
   const isProduction = process.env.NODE_ENV === 'production'
-  const comfyUIUrl = process.env.COMFYUI_URL || "127.0.0.1:8188"
+  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188"
   const serverUrl = comfyUIUrl.startsWith('http') ? comfyUIUrl : `http://${comfyUIUrl}`
   
   console.log(`环境: ${isProduction ? '生产环境' : '开发环境'}`)
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const isProduction = process.env.NODE_ENV === 'production'
-    const comfyUIUrl = process.env.COMFYUI_URL || "127.0.0.1:8188"
+    const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188"
     const serverUrl = comfyUIUrl.startsWith('http') ? comfyUIUrl : `http://${comfyUIUrl}`
     const client = new SimpleComfyUIClient(serverUrl)
     
