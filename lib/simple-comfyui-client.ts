@@ -71,7 +71,7 @@ export interface QueueResponse {
 export class SimpleComfyUIClient {
   private serverUrl: string
 
-  constructor(serverUrl: string = "http://127.0.0.1:8188") {
+  constructor(serverUrl: string = "http://82.157.19.21:8188") {
     this.serverUrl = serverUrl
   }
 
