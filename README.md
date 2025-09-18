@@ -21,6 +21,22 @@
 
    默认访问地址：http://localhost:3000
 
+## 🤝 贡献指南
+
+欢迎贡献代码！请查看我们的贡献指南：
+
+- 📖 [贡献指南 (CONTRIBUTING.md)](./CONTRIBUTING.md)
+- 🚀 [部署文档 (VERCEL_DEPLOYMENT.md)](./VERCEL_DEPLOYMENT.md)
+- 🗄️ [数据库设置 (databasereadme.md)](./databasereadme.md)
+
+### 快速贡献流程
+
+1. **Fork此项目**
+2. **创建功能分支**: `git checkout -b feature/amazing-feature`
+3. **提交更改**: `git commit -m 'feat: 添加新功能'`
+4. **推送分支**: `git push origin feature/amazing-feature`
+5. **创建Pull Request**
+
 ## Overview
 
 This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
