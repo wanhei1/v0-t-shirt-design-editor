@@ -154,7 +154,8 @@ bun run lint
 
 - 📁 [项目结构说明](./PROJECT_STRUCTURE.md)
 - 🤝 [详细贡献指南](./CONTRIBUTING.md)
-- 🚀 [Vercel部署指南](./VERCEL_DEPLOYMENT.md)
+- � [GitHub管理指南](./GITHUB_MANAGEMENT_GUIDE.md)
+- �🚀 [Vercel部署指南](./VERCEL_DEPLOYMENT.md)
 - 🗄️ [数据库设置教程](./databasereadme.md)
 
 ## 📄 许可证
