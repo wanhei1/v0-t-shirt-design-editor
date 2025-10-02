@@ -2,7 +2,17 @@
 
 *Automatically synced with your [v0.app](https://v0.app) deployments*
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/wanhei1s-projects/v0-t-shirt-design-editor)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-## 📚 相关文档
+
+- 📁 [项目结构说明](./PROJECT_STRUCTURE.md)
+- 🤝 [详细贡献指南](./CONTRIBUTING.md)
+- 📋 [GitHub管理指南](./GITHUB_MANAGEMENT_GUIDE.md)
+- 🎨 [前端组件详细说明](./FRONTEND_COMPONENTS_README.md)
+- 🚀 [快速使用指南](./QUICK_START_GUIDE.md)
+- 🤖 [AI改造指南](./AI_REDESIGN_GUIDE.md)
+- 📝 [AI指令模板](./AI_INSTRUCTION_TEMPLATE.md)
+- 🚀 [Vercel部署指南](./VERCEL_DEPLOYMENT.md)
+- 🗄️ [数据库设置教程](./databasereadme.md)black?style=for-the-badge&logo=vercel)](https://vercel.com/wanhei1s-projects/v0-t-shirt-design-editor)
 [![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/yvQIuJ8vycj)
 
 ## 快速开始
@@ -131,6 +141,20 @@ bun run start
 
 # 代码检查
 bun run lint
+```
+
+### 前端组件打包
+
+```bash
+# Windows PowerShell
+.\package-frontend.ps1
+
+# Linux/Mac
+./package-frontend.sh
+
+# 查看帮助
+.\package-frontend.ps1 -Help
+./package-frontend.sh --help
 ```
 
 ## 🔍 故障排除
