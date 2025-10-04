@@ -1,4 +1,4 @@
-# T-shirt design editor
+# v0 T-shirt Design Editor
 
 *Automatically synced with your [v0.app](https://v0.app) deployments*
 
@@ -15,19 +15,79 @@
 - 🗄️ [数据库设置教程](./databasereadme.md)black?style=for-the-badge&logo=vercel)](https://vercel.com/wanhei1s-projects/v0-t-shirt-design-editor)
 [![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/yvQIuJ8vycj)
 
-## 快速开始
+## 📁 Project Structure
 
-1. **安装依赖**
+```
+v0-t-shirt-design-editor/
+├── frontend/          # Next.js frontend application
+├── backend/           # Node.js/Express backend API
+├── shared/            # Shared types, utilities, and constants
+├── docs/             # Documentation files
+├── package.json      # Root package.json for monorepo management
+└── README.md         # This file
+```
 
-   ```bash
-   bun install
-   ```
+## 🚀 Quick Start
 
-2. **启动开发服务器**
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- PostgreSQL database (Neon Database recommended)
 
-   ```bash
-   bun run dev
-   ```
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yeesiang03/v0-t-shirt-design-editor.git
+cd v0-t-shirt-design-editor
+```
+
+2. Install all dependencies:
+```bash
+npm run install:all
+```
+
+3. Set up environment variables:
+```bash
+# Copy example environment files
+cp frontend/.env.example frontend/.env.local
+cp backend/.env.example backend/.env
+```
+
+4. Start development servers:
+```bash
+npm run dev
+```
+
+This will start both frontend (port 3000) and backend (port 3001) servers.
+
+## 📚 Development Commands
+
+```bash
+# Start both frontend and backend in development mode
+npm run dev
+
+# Start frontend only
+npm run dev:frontend
+
+# Start backend only  
+npm run dev:backend
+
+# Build both projects
+npm run build
+
+# Build frontend only
+npm run build:frontend
+
+# Build backend only
+npm run build:backend
+
+# Install dependencies for all projects
+npm run install:all
+
+# Run tests
+npm test
+```
 
    默认访问地址：http://localhost:3000
 
