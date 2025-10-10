@@ -98,14 +98,33 @@ export class SimpleComfyUIClient {
       ? serverUrl.split(',').map(url => url.trim())
       : [serverUrl]
     
+    // 检查是否为生产环境
+    const isProduction = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production'
+    
     // 设置备用服务器列表：配置的地址 + 默认本地地址
     const defaultLocalUrls = [
+      "http://0.0.0.0:8188",
       "http://127.0.0.1:8188",
       "http://localhost:8188"
     ]
     
-    // 合并并去重
-    const allUrls = [...urlsFromConfig, ...defaultLocalUrls]
+    // 生产环境：只使用配置的地址，过滤掉本地地址
+    // 开发环境：使用所有地址
+    let allUrls: string[]
+    if (isProduction) {
+      // 过滤掉本地地址
+      allUrls = urlsFromConfig.filter(url => 
+        !url.includes('127.0.0.1') && 
+        !url.includes('localhost') &&
+        !url.includes('0.0.0.0')
+      )
+      console.log(`生产环境：只使用公网地址`)
+    } else {
+      // 合并所有地址
+      allUrls = [...urlsFromConfig, ...defaultLocalUrls]
+    }
+    
+    // 去重
     this.fallbackUrls = Array.from(new Set(allUrls))
     
     console.log(`ComfyUI 服务器列表 (按优先级):`, this.fallbackUrls)
