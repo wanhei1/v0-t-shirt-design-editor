@@ -1,20 +1,25 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188"
-  const primaryUrl = comfyUIUrl.startsWith('http') ? comfyUIUrl : `http://${comfyUIUrl}`
+  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
   
-  // 要测试的所有服务器地址
+  // 解析配置的服务器地址（支持逗号分隔）
+  const configuredServers = comfyUIUrl.split(',').map(url => url.trim())
+  
+  // 添加默认的本地服务器（如果未在配置中）
   const serversToTest = [
-    primaryUrl,
+    ...configuredServers,
     "http://127.0.0.1:8188",
     "http://localhost:8188"
   ]
+  
+  // 去重
+  const uniqueServers = Array.from(new Set(serversToTest))
 
   const results = []
 
   // 测试所有服务器
-  for (const testUrl of serversToTest) {
+  for (const testUrl of uniqueServers) {
     try {
       console.log(`Testing connection to: ${testUrl}`)
       
@@ -60,11 +65,11 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     vercelRegion: process.env.VERCEL_REGION || 'unknown',
     nodeVersion: process.version,
-    primaryServer: primaryUrl,
+    configuredServers: configuredServers,
     availableServer: availableServer?.url || null,
     allResults: results,
     summary: {
-      total: serversToTest.length,
+      total: uniqueServers.length,
       available: results.filter(r => r.success).length,
       failed: results.filter(r => !r.success).length
     }

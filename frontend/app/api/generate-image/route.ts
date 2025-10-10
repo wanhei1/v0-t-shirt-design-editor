@@ -58,14 +58,14 @@ const styleConfigs: Record<string, {
 async function generateWithComfyUI(prompt: string, style: string): Promise<string> {
   // 环境检测和服务器配置
   const isProduction = process.env.NODE_ENV === 'production'
-  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188"
-  const serverUrl = comfyUIUrl.startsWith('http') ? comfyUIUrl : `http://${comfyUIUrl}`
+  // 支持多个服务器地址，用逗号分隔
+  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
   
   console.log(`环境: ${isProduction ? '生产环境' : '开发环境'}`)
-  console.log(`ComfyUI 主服务器地址: ${serverUrl}`)
-  console.log(`将自动尝试连接：外网 -> 本地内网`)
+  console.log(`ComfyUI 配置: ${comfyUIUrl}`)
+  console.log(`将按优先级自动尝试所有配置的服务器`)
   
-  const client = new SimpleComfyUIClient(serverUrl)
+  const client = new SimpleComfyUIClient(comfyUIUrl)
 
   // 检查连接（会自动尝试多个地址）
   try {
@@ -171,25 +171,24 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const isProduction = process.env.NODE_ENV === 'production'
-    const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188"
-    const serverUrl = comfyUIUrl.startsWith('http') ? comfyUIUrl : `http://${comfyUIUrl}`
-    const client = new SimpleComfyUIClient(serverUrl)
+    const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
+    const client = new SimpleComfyUIClient(comfyUIUrl)
     
-    console.log(`健康检查 - 环境: ${isProduction ? '生产' : '开发'}, 主服务器: ${serverUrl}`)
+    console.log(`健康检查 - 环境: ${isProduction ? '生产' : '开发'}`)
     
     const isAvailable = await client.checkConnection()
     const activeServer = client.getActiveServerUrl()
+    const configuredServers = comfyUIUrl.split(',').map(s => s.trim())
 
     return NextResponse.json({
       status: "ok",
       environment: isProduction ? 'production' : 'development',
       comfyUIAvailable: isAvailable,
-      primaryServer: serverUrl,
+      configuredServers: configuredServers,
       activeServer: activeServer || '无可用服务器',
-      attemptedServers: ['外网地址', '127.0.0.1:8188', 'localhost:8188'],
       message: isAvailable 
         ? `ComfyUI 连接正常 (使用: ${activeServer})` 
-        : "所有 ComfyUI 服务器均不可用"
+        : "所有配置的 ComfyUI 服务器均不可用"
     })
   } catch (error) {
     return NextResponse.json({

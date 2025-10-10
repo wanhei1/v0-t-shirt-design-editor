@@ -92,12 +92,23 @@ export class SimpleComfyUIClient {
 
   constructor(serverUrl: string = "http://82.157.19.21:8188") {
     this.serverUrl = serverUrl
-    // 设置备用服务器列表：外网 -> 本地
-    this.fallbackUrls = [
-      serverUrl, // 首选：配置的外网地址
-      "http://127.0.0.1:8188", // 备用：本地地址
-      "http://localhost:8188"  // 备用：localhost
+    
+    // 解析服务器地址：支持逗号分隔的多个地址
+    const urlsFromConfig = serverUrl.includes(',') 
+      ? serverUrl.split(',').map(url => url.trim())
+      : [serverUrl]
+    
+    // 设置备用服务器列表：配置的地址 + 默认本地地址
+    const defaultLocalUrls = [
+      "http://127.0.0.1:8188",
+      "http://localhost:8188"
     ]
+    
+    // 合并并去重
+    const allUrls = [...urlsFromConfig, ...defaultLocalUrls]
+    this.fallbackUrls = Array.from(new Set(allUrls))
+    
+    console.log(`ComfyUI 服务器列表 (按优先级):`, this.fallbackUrls)
   }
 
   /**
