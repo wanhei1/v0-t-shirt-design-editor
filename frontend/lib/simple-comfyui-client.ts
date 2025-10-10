@@ -90,7 +90,7 @@ export class SimpleComfyUIClient {
   private fallbackUrls: string[]
   private activeUrl: string | null = null
 
-  constructor(serverUrl: string = "http://82.157.19.21:8188") {
+  constructor(serverUrl: string = "http://82.157.19.21:23090") {
     this.serverUrl = serverUrl
     
     // 解析服务器地址：支持逗号分隔的多个地址
@@ -103,9 +103,9 @@ export class SimpleComfyUIClient {
     
     // 设置备用服务器列表：配置的地址 + 默认本地地址
     const defaultLocalUrls = [
-      "http://0.0.0.0:8188",
-      "http://127.0.0.1:8188",
-      "http://localhost:8188"
+      "http://0.0.0.0:23090",
+      "http://127.0.0.1:23090",
+      "http://localhost:23090"
     ]
     
     // 生产环境：只使用配置的地址，过滤掉本地地址

@@ -59,7 +59,7 @@ async function generateWithComfyUI(prompt: string, style: string): Promise<strin
   // 环境检测和服务器配置
   const isProduction = process.env.NODE_ENV === 'production'
   // 支持多个服务器地址，用逗号分隔
-  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
+  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:23090,http://127.0.0.1:23090"
   
   console.log(`环境: ${isProduction ? '生产环境' : '开发环境'}`)
   console.log(`ComfyUI 配置: ${comfyUIUrl}`)
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const isProduction = process.env.NODE_ENV === 'production'
-    const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
+    const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:23090,http://127.0.0.1:23090"
     const client = new SimpleComfyUIClient(comfyUIUrl)
     
     console.log(`健康检查 - 环境: ${isProduction ? '生产' : '开发'}`)

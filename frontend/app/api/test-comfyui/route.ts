@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:8188,http://127.0.0.1:8188"
+  const comfyUIUrl = process.env.COMFYUI_URL || "http://82.157.19.21:23090,http://127.0.0.1:23090"
   
   // 解析配置的服务器地址（支持逗号分隔）
   const configuredServers = comfyUIUrl.split(',').map(url => url.trim())
@@ -9,8 +9,8 @@ export async function GET() {
   // 添加默认的本地服务器（如果未在配置中）
   const serversToTest = [
     ...configuredServers,
-    "http://127.0.0.1:8188",
-    "http://localhost:8188"
+    "http://127.0.0.1:23090",
+    "http://localhost:23090"
   ]
   
   // 去重
