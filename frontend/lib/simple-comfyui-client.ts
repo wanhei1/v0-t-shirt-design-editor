@@ -87,9 +87,66 @@ export type HistoryResponse = Record<string, SimpleHistoryItem>
 
 export class SimpleComfyUIClient {
   private serverUrl: string
+  private fallbackUrls: string[]
+  private activeUrl: string | null = null
 
   constructor(serverUrl: string = "http://82.157.19.21:8188") {
     this.serverUrl = serverUrl
+    // 设置备用服务器列表：外网 -> 本地
+    this.fallbackUrls = [
+      serverUrl, // 首选：配置的外网地址
+      "http://127.0.0.1:8188", // 备用：本地地址
+      "http://localhost:8188"  // 备用：localhost
+    ]
+  }
+
+  /**
+   * 智能连接：尝试所有可用的服务器地址
+   */
+  private async findAvailableServer(): Promise<string | null> {
+    // 如果已经找到可用的服务器，直接使用
+    if (this.activeUrl) {
+      try {
+        const response = await fetch(`${this.activeUrl}/queue`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        })
+        if (response.ok) {
+          return this.activeUrl
+        }
+        // 如果之前的服务器失效，重置并重新查找
+        this.activeUrl = null
+      } catch {
+        this.activeUrl = null
+      }
+    }
+
+    // 遍历所有可能的服务器地址
+    for (const url of this.fallbackUrls) {
+      try {
+        console.log(`尝试连接到: ${url}`)
+        const response = await fetch(`${url}/queue`, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'CustomTshirtDesigner/1.0'
+          },
+          signal: AbortSignal.timeout(5000)
+        })
+        
+        if (response.ok) {
+          console.log(`✓ 成功连接到: ${url}`)
+          this.activeUrl = url
+          this.serverUrl = url // 更新主服务器地址
+          return url
+        }
+      } catch (error) {
+        console.log(`✗ 无法连接到 ${url}:`, error instanceof Error ? error.message : '未知错误')
+        continue
+      }
+    }
+
+    console.error('所有服务器地址均不可用')
+    return null
   }
 
   /**
@@ -185,9 +242,15 @@ export class SimpleComfyUIClient {
    * 提交工作流到队列
    */
   async queuePrompt(workflow: SimpleWorkflow): Promise<QueueResponse> {
+    // 先找到可用的服务器
+    const availableServer = await this.findAvailableServer()
+    if (!availableServer) {
+      throw new Error('没有可用的 ComfyUI 服务器')
+    }
+
     const payload = { prompt: workflow }
     
-    const response = await fetch(`${this.serverUrl}/prompt`, {
+    const response = await fetch(`${availableServer}/prompt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -238,21 +301,15 @@ export class SimpleComfyUIClient {
    * 检查服务器连接
    */
   async checkConnection(): Promise<boolean> {
-    try {
-      console.log(`尝试连接到: ${this.serverUrl}/queue`)
-      const response = await fetch(`${this.serverUrl}/queue`, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'CustomTshirtDesigner/1.0'
-        },
-        signal: AbortSignal.timeout(10000) // 增加超时时间到10秒
-      })
-      console.log(`连接响应状态: ${response.status}`)
-      return response.ok
-    } catch (error) {
-      console.error(`连接错误详情:`, error)
-      return false
-    }
+    const availableServer = await this.findAvailableServer()
+    return availableServer !== null
+  }
+
+  /**
+   * 获取当前活跃的服务器地址
+   */
+  getActiveServerUrl(): string | null {
+    return this.activeUrl
   }
 
   /**
@@ -331,11 +388,13 @@ export class SimpleComfyUIClient {
       steps: number
     }
   }> {
-    // 检查连接
+    // 检查连接并找到可用服务器
     const isConnected = await this.checkConnection()
     if (!isConnected) {
-      throw new Error('ComfyUI 服务器不可用')
+      throw new Error('所有 ComfyUI 服务器均不可用（已尝试外网和本地服务器）')
     }
+
+    console.log(`使用服务器: ${this.activeUrl}`)
 
     // 创建工作流
     const workflow = this.createWorkflow(prompt, negativePrompt, options)
