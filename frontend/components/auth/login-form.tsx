@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
@@ -34,6 +35,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login, isLoading } = useAuth();
+  const { translate } = useLanguage();
 
   const {
     register,
@@ -48,16 +50,22 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       setError(null);
       await login(data.email, data.password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败，请重试");
+      setError(
+        err instanceof Error
+          ? err.message
+          : translate({ zh: "登录失败，请重试", en: "Login failed, please try again" })
+      );
     }
   };
 
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">登录</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">
+          {translate({ zh: "登录", en: "Log in" })}
+        </CardTitle>
         <CardDescription className="text-center">
-          输入您的邮箱和密码登录账户
+          {translate({ zh: "输入您的邮箱和密码登录账户", en: "Enter your email and password to access your account" })}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -69,11 +77,11 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">邮箱</Label>
+            <Label htmlFor="email">{translate({ zh: "邮箱", en: "Email" })}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="请输入邮箱"
+              placeholder={translate({ zh: "请输入邮箱", en: "Enter your email" })}
               {...register("email")}
               className={errors.email ? "border-red-500" : ""}
             />
@@ -83,12 +91,12 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">密码</Label>
+            <Label htmlFor="password">{translate({ zh: "密码", en: "Password" })}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="请输入密码"
+                placeholder={translate({ zh: "请输入密码", en: "Enter your password" })}
                 {...register("password")}
                 className={errors.password ? "border-red-500 pr-10" : "pr-10"}
               />
@@ -116,22 +124,22 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                登录中...
+                {translate({ zh: "登录中...", en: "Logging in..." })}
               </>
             ) : (
-              "登录"
+              translate({ zh: "登录", en: "Log in" })
             )}
           </Button>
           <div className="text-center">
             <span className="text-sm text-gray-600">
-              还没有账户？{" "}
+              {translate({ zh: "还没有账户？", en: "Don't have an account?" })}{" "}
               <Button
                 type="button"
                 variant="link"
                 className="p-0"
                 onClick={onSwitchToRegister}
               >
-                立即注册
+                {translate({ zh: "立即注册", en: "Sign up now" })}
               </Button>
             </span>
           </div>

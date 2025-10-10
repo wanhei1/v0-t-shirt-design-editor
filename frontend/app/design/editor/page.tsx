@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,8 +26,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { AIGenerator } from "@/components/design-tools/ai-generator"
 import { ImageUploader } from "@/components/design-tools/image-uploader"
+import { useLanguage, type LanguageText } from "@/contexts/language-context"
 
 interface DesignElement {
   id: string
@@ -67,10 +69,42 @@ const colors = [
   "#800080",
 ]
 
+const styleLabels: Record<string, LanguageText> = {
+  classic: { zh: "经典版型", en: "Classic Fit" },
+  slim: { zh: "修身版型", en: "Slim Fit" },
+  oversized: { zh: "宽松版型", en: "Oversized" },
+}
+
+const colorLabels: Record<string, LanguageText> = {
+  white: { zh: "白色", en: "White" },
+  black: { zh: "黑色", en: "Black" },
+  navy: { zh: "海军蓝", en: "Navy" },
+  gray: { zh: "灰色", en: "Gray" },
+  red: { zh: "红色", en: "Red" },
+  green: { zh: "绿色", en: "Green" },
+  blue: { zh: "蓝色", en: "Blue" },
+  purple: { zh: "紫色", en: "Purple" },
+}
+
 export default function DesignEditorPage() {
   const router = useRouter()
   const canvasRef = useRef<HTMLDivElement>(null)
-  const [selections, setSelections] = useState<TShirtSelections | null>(null)
+  const { translate } = useLanguage()
+  const [selections] = useState<TShirtSelections | null>(() => {
+    if (typeof window === "undefined") {
+      return null
+    }
+    const storedSelections = window.localStorage.getItem("tshirtSelections")
+    if (!storedSelections) {
+      return null
+    }
+    try {
+      return JSON.parse(storedSelections) as TShirtSelections
+    } catch (error) {
+      console.error("Failed to parse saved selections", error)
+      return null
+    }
+  })
   const [activeTab, setActiveTab] = useState("ai")
   const [designElements, setDesignElements] = useState<DesignElement[]>([])
   const [selectedElement, setSelectedElement] = useState<string | null>(null)
@@ -87,14 +121,6 @@ export default function DesignEditorPage() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0 })
   const [resizeStart, setResizeStart] = useState({ width: 0, height: 0 })
-  const [rotationStart, setRotationStart] = useState(0)
-
-  useEffect(() => {
-    const storedSelections = localStorage.getItem("tshirtSelections")
-    if (storedSelections) {
-      setSelections(JSON.parse(storedSelections))
-    }
-  }, [])
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string, action: "drag" | "resize" | "rotate" = "drag") => {
     e.preventDefault()
@@ -114,7 +140,6 @@ export default function DesignEditorPage() {
       setResizeStart({ width: element.width, height: element.height })
     } else if (action === "rotate") {
       setIsRotating(true)
-      setRotationStart(element.rotation)
     }
   }
 
@@ -233,6 +258,28 @@ export default function DesignEditorPage() {
 
   const selectedElementData = designElements.find((el) => el.id === selectedElement)
 
+  const getStyleLabel = (styleId?: string) => {
+    if (!styleId) {
+      return ""
+    }
+    const label = styleLabels[styleId]
+    return label ? translate(label) : styleId
+  }
+
+  const getColorLabel = (colorId?: string) => {
+    if (!colorId) {
+      return ""
+    }
+    const label = colorLabels[colorId]
+    return label ? translate(label) : colorId
+  }
+
+  const frontElementCount = designElements.filter((el) => el.side === "front").length
+  const backElementCount = designElements.filter((el) => el.side === "back").length
+  const currentSideElements = designElements.filter((el) => el.side === (showFront ? "front" : "back"))
+  const visibleCurrentElements = currentSideElements.filter((el) => el.visible)
+  const otherSideCount = designElements.filter((el) => el.side === (showFront ? "back" : "front")).length
+
   const handleContinueToPreview = () => {
     const designData = {
       selections,
@@ -251,20 +298,24 @@ export default function DesignEditorPage() {
             <Button variant="ghost" size="sm" asChild>
               <Link href="/design">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {translate({ zh: "返回", en: "Back" })}
               </Link>
             </Button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Palette className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">CustomTee</span>
+              <span className="text-xl font-bold text-foreground">
+                {translate({ zh: "yituai", en: "yituai" })}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="outline">Step 2 of 3</Badge>
+            <Badge variant="outline">
+              {translate({ zh: "第 2 步 / 共 3 步", en: "Step 2 of 3" })}
+            </Badge>
             <Button onClick={handleContinueToPreview} disabled={designElements.length === 0}>
-              Continue to Preview
+              {translate({ zh: "前往预览", en: "Continue to Preview" })}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -275,21 +326,23 @@ export default function DesignEditorPage() {
         {/* Left Sidebar - Tools */}
         <div className="w-80 border-r border-border bg-card/30 overflow-y-auto">
           <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">Design Tools</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              {translate({ zh: "设计工具", en: "Design Tools" })}
+            </h2>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="ai" className="text-xs">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  AI
+                  {translate({ zh: "AI", en: "AI" })}
                 </TabsTrigger>
                 <TabsTrigger value="text" className="text-xs">
                   <Type className="w-4 h-4 mr-1" />
-                  Text
+                  {translate({ zh: "文字", en: "Text" })}
                 </TabsTrigger>
                 <TabsTrigger value="upload" className="text-xs">
                   <Upload className="w-4 h-4 mr-1" />
-                  Upload
+                  {translate({ zh: "上传", en: "Upload" })}
                 </TabsTrigger>
               </TabsList>
 
@@ -300,21 +353,29 @@ export default function DesignEditorPage() {
               <TabsContent value="text" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Add Text</CardTitle>
-                    <CardDescription>Customize your text design</CardDescription>
+                    <CardTitle className="text-base">
+                      {translate({ zh: "添加文字", en: "Add Text" })}
+                    </CardTitle>
+                    <CardDescription>
+                      {translate({ zh: "自定义文字样式", en: "Customize your text design" })}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="text-input">Text</Label>
+                      <Label htmlFor="text-input">
+                        {translate({ zh: "文字内容", en: "Text" })}
+                      </Label>
                       <Input
                         id="text-input"
-                        placeholder="Enter your text..."
+                        placeholder={translate({ zh: "请输入文字...", en: "Enter your text..." })}
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="font-select">Font</Label>
+                      <Label htmlFor="font-select">
+                        {translate({ zh: "字体", en: "Font" })}
+                      </Label>
                       <select
                         id="font-select"
                         value={selectedFont}
@@ -329,7 +390,12 @@ export default function DesignEditorPage() {
                       </select>
                     </div>
                     <div>
-                      <Label>Font Size: {fontSize[0]}px</Label>
+                      <Label>
+                        {translate({
+                          zh: `字体大小：${fontSize[0]}px`,
+                          en: `Font Size: ${fontSize[0]}px`,
+                        })}
+                      </Label>
                       <Slider
                         value={fontSize}
                         onValueChange={setFontSize}
@@ -340,7 +406,7 @@ export default function DesignEditorPage() {
                       />
                     </div>
                     <div>
-                      <Label>Color</Label>
+                      <Label>{translate({ zh: "颜色", en: "Color" })}</Label>
                       <div className="grid grid-cols-5 gap-2 mt-2">
                         {colors.map((color) => (
                           <button
@@ -355,7 +421,7 @@ export default function DesignEditorPage() {
                       </div>
                     </div>
                     <Button onClick={addTextElement} disabled={!textInput.trim()} className="w-full">
-                      Add Text
+                      {translate({ zh: "添加文字", en: "Add Text" })}
                     </Button>
                   </CardContent>
                 </Card>
@@ -370,11 +436,13 @@ export default function DesignEditorPage() {
             {selectedElementData && (
               <Card className="mt-4">
                 <CardHeader>
-                  <CardTitle className="text-base">Element Properties</CardTitle>
+                  <CardTitle className="text-base">
+                    {translate({ zh: "元素属性", en: "Element Properties" })}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label>Visible</Label>
+                    <Label>{translate({ zh: "显示状态", en: "Visible" })}</Label>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -385,17 +453,23 @@ export default function DesignEditorPage() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label>Quick Rotate</Label>
+                    <Label>{translate({ zh: "快速旋转", en: "Quick Rotate" })}</Label>
                     <Button variant="ghost" size="sm" onClick={() => rotateElement(selectedElementData.id, 90)}>
                       <RotateCw className="w-4 h-4" />
                     </Button>
                   </div>
 
                   <div>
-                    <Label>Width: {selectedElementData.width}px</Label>
+                    <Label>
+                      {translate({
+                        zh: `宽度：${selectedElementData.width}px`,
+                        en: `Width: ${selectedElementData.width}px`,
+                      })}
+                    </Label>
                     <Slider
                       value={[selectedElementData.width]}
-                      onValueChange={([width]) => updateElement(selectedElementData.id, { width })}
+                      onValueChange={([width]: number[]) =>
+                        updateElement(selectedElementData.id, { width })}
                       max={300}
                       min={50}
                       step={5}
@@ -403,10 +477,16 @@ export default function DesignEditorPage() {
                     />
                   </div>
                   <div>
-                    <Label>Height: {selectedElementData.height}px</Label>
+                    <Label>
+                      {translate({
+                        zh: `高度：${selectedElementData.height}px`,
+                        en: `Height: ${selectedElementData.height}px`,
+                      })}
+                    </Label>
                     <Slider
                       value={[selectedElementData.height]}
-                      onValueChange={([height]) => updateElement(selectedElementData.id, { height })}
+                      onValueChange={([height]: number[]) =>
+                        updateElement(selectedElementData.id, { height })}
                       max={300}
                       min={20}
                       step={5}
@@ -414,10 +494,16 @@ export default function DesignEditorPage() {
                     />
                   </div>
                   <div>
-                    <Label>Rotation: {selectedElementData.rotation}°</Label>
+                    <Label>
+                      {translate({
+                        zh: `旋转角度：${selectedElementData.rotation}°`,
+                        en: `Rotation: ${selectedElementData.rotation}°`,
+                      })}
+                    </Label>
                     <Slider
                       value={[selectedElementData.rotation]}
-                      onValueChange={([rotation]) => updateElement(selectedElementData.id, { rotation })}
+                      onValueChange={([rotation]: number[]) =>
+                        updateElement(selectedElementData.id, { rotation })}
                       max={360}
                       min={0}
                       step={5}
@@ -431,7 +517,7 @@ export default function DesignEditorPage() {
                     className="w-full"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Element
+                    {translate({ zh: "删除元素", en: "Delete Element" })}
                   </Button>
                 </CardContent>
               </Card>
@@ -446,7 +532,10 @@ export default function DesignEditorPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h3 className="font-semibold">
-                  {selections?.style} T-Shirt - {selections?.color}
+                  {translate({
+                    zh: `${getStyleLabel(selections?.style)} T 恤 - ${getColorLabel(selections?.color)}`,
+                    en: `${getStyleLabel(selections?.style)} T-Shirt - ${getColorLabel(selections?.color)}`,
+                  })}
                 </h3>
                 <Badge variant="outline">{selections?.size}</Badge>
               </div>
@@ -465,10 +554,16 @@ export default function DesignEditorPage() {
 
                 <div className="flex items-center gap-2">
                   <Button variant={showFront ? "default" : "outline"} size="sm" onClick={() => setShowFront(true)}>
-                    Front ({designElements.filter((el) => el.side === "front").length})
+                    {translate({
+                      zh: `前面 (${frontElementCount})`,
+                      en: `Front (${frontElementCount})`,
+                    })}
                   </Button>
                   <Button variant={!showFront ? "default" : "outline"} size="sm" onClick={() => setShowFront(false)}>
-                    Back ({designElements.filter((el) => el.side === "back").length})
+                    {translate({
+                      zh: `背面 (${backElementCount})`,
+                      en: `Back (${backElementCount})`,
+                    })}
                   </Button>
                 </div>
               </div>
@@ -494,9 +589,7 @@ export default function DesignEditorPage() {
                   <div className="absolute inset-4 border border-dashed border-gray-300 rounded-lg opacity-30" />
 
                   {/* Design Elements */}
-                  {designElements
-                    .filter((el) => el.visible && el.side === (showFront ? "front" : "back"))
-                    .map((element) => (
+                  {visibleCurrentElements.map((element) => (
                       <div
                         key={element.id}
                         className={`absolute cursor-move border-2 transition-colors ${
@@ -528,12 +621,16 @@ export default function DesignEditorPage() {
                             {element.content}
                           </div>
                         ) : (
-                          <img
-                            src={element.content || "/placeholder.svg"}
-                            alt="Design element"
-                            className="w-full h-full object-contain pointer-events-none"
-                            draggable={false}
-                          />
+                          <div className="relative w-full h-full pointer-events-none">
+                            <Image
+                              src={element.content || "/placeholder.svg"}
+                              alt={translate({ zh: "设计元素", en: "Design element" })}
+                              fill
+                              className="object-contain"
+                              draggable={false}
+                              unoptimized
+                            />
+                          </div>
                         )}
 
                         {selectedElement === element.id && (
@@ -560,7 +657,7 @@ export default function DesignEditorPage() {
                             <div
                               className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full cursor-grab border-2 border-white shadow-md hover:scale-110 transition-transform"
                               onMouseDown={(e) => handleMouseDown(e, element.id, "rotate")}
-                              title="Drag to rotate"
+                              title={translate({ zh: "拖曳以旋转", en: "Drag to rotate" })}
                             />
 
                             {/* Center indicator */}
@@ -571,15 +668,25 @@ export default function DesignEditorPage() {
                     ))}
 
                   {/* Empty state */}
-                  {designElements.filter((el) => el.side === (showFront ? "front" : "back")).length === 0 && (
+                  {currentSideElements.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none">
                       <div className="text-center">
                         <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-sm">Start designing the {showFront ? "front" : "back"} of your T-shirt</p>
-                        <p className="text-xs">Use the tools on the left to add elements</p>
-                        {designElements.filter((el) => el.side === (showFront ? "back" : "front")).length > 0 && (
+                        <p className="text-sm">
+                          {translate({
+                            zh: `开始设计 T 恤的${showFront ? "前面" : "背面"}`,
+                            en: `Start designing the ${showFront ? "front" : "back"} of your T-shirt`,
+                          })}
+                        </p>
+                        <p className="text-xs">
+                          {translate({ zh: "使用左侧工具添加元素", en: "Use the tools on the left to add elements" })}
+                        </p>
+                        {otherSideCount > 0 && (
                           <p className="text-xs mt-2 text-primary">
-                            💡 Switch to {showFront ? "back" : "front"} to see your other designs
+                            {translate({
+                              zh: `💡 切换到${showFront ? "背面" : "前面"}查看其他设计`,
+                              en: `💡 Switch to the ${showFront ? "back" : "front"} to see your other designs`,
+                            })}
                           </p>
                         )}
                       </div>
@@ -588,7 +695,12 @@ export default function DesignEditorPage() {
                 </div>
 
                 <div className="mt-4 text-center text-sm text-muted-foreground">
-                  <p>💡 Click to select • Drag to move • Drag corners to resize • Drag green handle to rotate</p>
+                  <p>
+                    {translate({
+                      zh: "💡 点击选择 • 拖动移动 • 拖动边角缩放 • 拖动绿色把手旋转",
+                      en: "💡 Click to select • Drag to move • Drag corners to resize • Drag green handle to rotate",
+                    })}
+                  </p>
                 </div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Download, Share2, ShoppingCart, Palette, RotateCcw, Check } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useLanguage } from "@/contexts/language-context"
 
 interface DesignElement {
   id: string
@@ -40,6 +41,7 @@ interface DesignData {
 
 export default function PreviewPage() {
   const router = useRouter()
+  const { translate } = useLanguage()
   const canvasRef = useRef<HTMLDivElement>(null)
   const [designData, setDesignData] = useState<DesignData | null>(null)
   const [currentView, setCurrentView] = useState<"front" | "back">("front")
@@ -114,8 +116,8 @@ export default function PreviewPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Check out my custom T-shirt design!",
-          text: "I created this awesome design on CustomTee",
+          title: translate({ zh: "看看我的定制 T 恤设计！", en: "Check out my custom T-shirt design!" }),
+          text: translate({ zh: "我在 yituai 上创建了这个很棒的设计", en: "I created this awesome design on yituai" }),
           url: window.location.href,
         })
       } catch (error) {
@@ -124,7 +126,7 @@ export default function PreviewPage() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
-      alert("Design link copied to clipboard!")
+      alert(translate({ zh: "设计链接已复制到剪贴板！", en: "Design link copied to clipboard!" }))
     }
   }
 
@@ -163,7 +165,7 @@ export default function PreviewPage() {
             </div>
             <h2 className="text-2xl font-bold mb-2">Order Placed!</h2>
             <p className="text-muted-foreground mb-4">
-              Thank you for your order. You'll receive a confirmation email shortly.
+              Thank you for your order. You’ll receive a confirmation email shortly.
             </p>
             <p className="text-sm text-muted-foreground">Redirecting to homepage...</p>
           </CardContent>
@@ -180,25 +182,29 @@ export default function PreviewPage() {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={goBackToEditor}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Editor
+              {translate({ zh: "返回编辑器", en: "Back to Editor" })}
             </Button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Palette className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">CustomTee</span>
+              <span className="text-xl font-bold text-foreground">yituai</span>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="outline">Step 3 of 3</Badge>
+            <Badge variant="outline">
+              {translate({ zh: "第 3 步 / 共 3 步", en: "Step 3 of 3" })}
+            </Badge>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={shareDesign}>
                 <Share2 className="w-4 h-4 mr-2" />
-                Share
+                {translate({ zh: "分享", en: "Share" })}
               </Button>
               <Button variant="outline" onClick={exportDesign} disabled={isExporting}>
                 <Download className="w-4 h-4 mr-2" />
-                {isExporting ? "Exporting..." : "Export"}
+                {isExporting
+                  ? translate({ zh: "导出中...", en: "Exporting..." })
+                  : translate({ zh: "导出", en: "Export" })}
               </Button>
             </div>
           </div>
@@ -208,8 +214,15 @@ export default function PreviewPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Preview Your Design</h1>
-            <p className="text-xl text-muted-foreground">Review your custom T-shirt before placing your order</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {translate({ zh: "预览您的设计", en: "Preview Your Design" })}
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              {translate({
+                zh: "在下单前查看您的定制 T 恤",
+                en: "Review your custom T-shirt before placing your order",
+              })}
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
@@ -218,21 +231,23 @@ export default function PreviewPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Design Preview</CardTitle>
+                    <CardTitle>
+                      {translate({ zh: "设计预览", en: "Design Preview" })}
+                    </CardTitle>
                     <div className="flex items-center gap-2">
                       <Button
                         variant={currentView === "front" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setCurrentView("front")}
                       >
-                        Front
+                        {translate({ zh: "前面", en: "Front" })}
                       </Button>
                       <Button
                         variant={currentView === "back" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setCurrentView("back")}
                       >
-                        Back
+                        {translate({ zh: "背面", en: "Back" })}
                       </Button>
                     </div>
                   </div>
@@ -295,8 +310,15 @@ export default function PreviewPage() {
                         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                           <div className="text-center">
                             <RotateCcw className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p className="text-sm">{currentView === "front" ? "Front" : "Back"} view</p>
-                            <p className="text-xs">No design elements on this side</p>
+                            <p className="text-sm">
+                              {translate({
+                                zh: currentView === "front" ? "前视图" : "后视图",
+                                en: currentView === "front" ? "Front view" : "Back view",
+                              })}
+                            </p>
+                            <p className="text-xs">
+                              {translate({ zh: "此面没有设计元素", en: "No design elements on this side" })}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -309,11 +331,14 @@ export default function PreviewPage() {
               {designData.elements.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Design Elements</CardTitle>
+                    <CardTitle className="text-lg">
+                      {translate({ zh: "设计元素", en: "Design Elements" })}
+                    </CardTitle>
                     <CardDescription>
-                      Elements on {currentView} side (
-                      {designData.elements.filter((el) => el.side === currentView).length} items){" "}
-                      {/* Show count for current side */}
+                      {translate({
+                        zh: `${currentView === "front" ? "前面" : "背面"}的元素 (${designData.elements.filter((el) => el.side === currentView).length} 项)`,
+                        en: `Elements on ${currentView} side (${designData.elements.filter((el) => el.side === currentView).length} items)`,
+                      })}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -328,25 +353,35 @@ export default function PreviewPage() {
                             <div className="flex-1">
                               <p className="text-sm font-medium">
                                 {element.type === "text"
-                                  ? "Text"
+                                  ? translate({ zh: "文字", en: "Text" })
                                   : element.type === "ai-generated"
-                                    ? "AI Generated"
-                                    : "Image"}
+                                    ? translate({ zh: "AI 生成", en: "AI Generated" })
+                                    : translate({ zh: "图片", en: "Image" })}
                               </p>
                               <p className="text-xs text-muted-foreground truncate">
-                                {element.type === "text" ? element.content : "Custom image"}
+                                {element.type === "text"
+                                  ? element.content
+                                  : translate({ zh: "自定义图片", en: "Custom image" })}
                               </p>
                             </div>
                             <Badge variant={element.visible ? "default" : "secondary"}>
-                              {element.visible ? "Visible" : "Hidden"}
+                              {element.visible
+                                ? translate({ zh: "可见", en: "Visible" })
+                                : translate({ zh: "隐藏", en: "Hidden" })}
                             </Badge>
                           </div>
                         ))}
                     </div>
                     <div className="mt-4 pt-4 border-t border-border">
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Front elements: {designData.elements.filter((el) => el.side === "front").length}</span>
-                        <span>Back elements: {designData.elements.filter((el) => el.side === "back").length}</span>
+                        <span>
+                          {translate({ zh: "前面元素", en: "Front elements" })}:{" "}
+                          {designData.elements.filter((el) => el.side === "front").length}
+                        </span>
+                        <span>
+                          {translate({ zh: "背面元素", en: "Back elements" })}:{" "}
+                          {designData.elements.filter((el) => el.side === "back").length}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -358,16 +393,22 @@ export default function PreviewPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>
+                    {translate({ zh: "订单摘要", en: "Order Summary" })}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Style:</span>
+                      <span className="text-muted-foreground">
+                        {translate({ zh: "版型：", en: "Style:" })}
+                      </span>
                       <span className="font-medium">{designData.selections.style}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Color:</span>
+                      <span className="text-muted-foreground">
+                        {translate({ zh: "颜色：", en: "Color:" })}
+                      </span>
                       <div className="flex items-center gap-2">
                         <div
                           className="w-4 h-4 rounded-full border"
@@ -384,15 +425,20 @@ export default function PreviewPage() {
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Size:</span>
+                      <span className="text-muted-foreground">
+                        {translate({ zh: "尺码：", en: "Size:" })}
+                      </span>
                       <span className="font-medium">{designData.selections.size}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Design Elements:</span>
+                      <span className="text-muted-foreground">
+                        {translate({ zh: "设计元素：", en: "Design Elements:" })}
+                      </span>
                       <span className="font-medium">
-                        {designData.elements.filter((el) => el.side === "front").length} front,{" "}
-                        {/* Show separate counts for front and back */}
-                        {designData.elements.filter((el) => el.side === "back").length} back
+                        {translate({
+                          zh: `${designData.elements.filter((el) => el.side === "front").length} 前, ${designData.elements.filter((el) => el.side === "back").length} 后`,
+                          en: `${designData.elements.filter((el) => el.side === "front").length} front, ${designData.elements.filter((el) => el.side === "back").length} back`,
+                        })}
                       </span>
                     </div>
                   </div>
@@ -401,20 +447,20 @@ export default function PreviewPage() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Base Price:</span>
+                      <span>{translate({ zh: "基础价格：", en: "Base Price:" })}</span>
                       <span>${designData.selections.price.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Design Fee:</span>
+                      <span>{translate({ zh: "设计费：", en: "Design Fee:" })}</span>
                       <span>$5.00</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Shipping:</span>
+                      <span>{translate({ zh: "运费：", en: "Shipping:" })}</span>
                       <span>$7.99</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-semibold">
-                      <span>Total:</span>
+                      <span>{translate({ zh: "总计：", en: "Total:" })}</span>
                       <span>${(designData.selections.price + 5 + 7.99).toFixed(2)}</span>
                     </div>
                   </div>
@@ -423,15 +469,20 @@ export default function PreviewPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Ready to Order?</CardTitle>
+                  <CardTitle>
+                    {translate({ zh: "准备下单？", en: "Ready to Order?" })}
+                  </CardTitle>
                   <CardDescription>
-                    Your custom T-shirt will be printed and shipped within 3-5 business days
+                    {translate({
+                      zh: "您的定制 T 恤将在 3-5 个工作日内打印并发货",
+                      en: "Your custom T-shirt will be printed and shipped within 3-5 business days",
+                    })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <Button variant="outline" onClick={goBackToEditor} className="w-full bg-transparent">
-                      Edit Design
+                      {translate({ zh: "编辑设计", en: "Edit Design" })}
                     </Button>
                     <Button
                       onClick={exportDesign}
@@ -440,15 +491,21 @@ export default function PreviewPage() {
                       className="w-full bg-transparent"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Export
+                      {translate({ zh: "导出", en: "Export" })}
                     </Button>
                   </div>
                   <Button onClick={placeOrder} size="lg" className="w-full">
                     <ShoppingCart className="w-5 h-5 mr-2" />
-                    Place Order - ${(designData.selections.price + 5 + 7.99).toFixed(2)}
+                    {translate({
+                      zh: `下单 - $${(designData.selections.price + 5 + 7.99).toFixed(2)}`,
+                      en: `Place Order - $${(designData.selections.price + 5 + 7.99).toFixed(2)}`,
+                    })}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    By placing this order, you agree to our Terms of Service and Privacy Policy
+                    {translate({
+                      zh: "下单即表示您同意我们的服务条款和隐私政策",
+                      en: "By placing this order, you agree to our Terms of Service and Privacy Policy",
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -462,7 +519,7 @@ export default function PreviewPage() {
                     </div>
                     <h3 className="font-semibold mb-2">100% Satisfaction Guarantee</h3>
                     <p className="text-sm text-muted-foreground">
-                      Not happy with your order? We'll make it right or give you a full refund.
+                      Not happy with your order? We’ll make it right or give you a full refund.
                     </p>
                   </div>
                 </CardContent>

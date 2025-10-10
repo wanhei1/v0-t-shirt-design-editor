@@ -37,33 +37,47 @@ app.get('/health', (req, res) => {
 
 // 初始化数据库连接和路由
 const initializeApp = async () => {
+    let client = null;
+    let dbConnected = false;
+    
     try {
-        const client = await connectToDatabase();
-        
-        // 创建用户表
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(255) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+        // 尝试连接数据库
+        try {
+            client = await connectToDatabase();
+            
+            // 创建用户表
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            
+            dbConnected = true;
+            console.log('✅ Database connected and initialized');
+        } catch (dbError: any) {
+            console.warn('⚠️ Database connection failed, running without database features');
+            console.log(`📝 Database error: ${dbError?.message || 'Unknown error'}`);
+            console.log('💡 To enable full features, please configure your DATABASE_URL environment variable');
+        }
 
-        // 设置 API 路由
-        app.use('/api', createRoutes(client));
+        // 设置 API 路由（传入数据库客户端，如果连接失败则为 null）
+        app.use('/api', createRoutes(client as any));
 
         // 404 处理
         app.use('*', (req, res) => {
             res.status(404).json({
                 message: 'Route not found',
+                database: dbConnected ? 'connected' : 'disconnected',
                 availableRoutes: [
                     'GET /',
                     'GET /health', 
-                    'POST /api/register',
-                    'POST /api/login',
-                    'GET /api/profile'
+                    'POST /api/register (需要数据库)',
+                    'POST /api/login (需要数据库)',
+                    'GET /api/profile (需要数据库)'
                 ]
             });
         });
@@ -72,9 +86,10 @@ const initializeApp = async () => {
             console.log(`🚀 Backend server is running on port ${PORT}`);
             console.log(`📡 API available at http://localhost:${PORT}/api`);
             console.log(`💚 Health check at http://localhost:${PORT}/health`);
+            console.log(`🗄️ Database status: ${dbConnected ? '✅ Connected' : '❌ Disconnected'}`);
         });
     } catch (error) {
-        console.error('Failed to initialize app:', error);
+        console.error('❌ Failed to initialize app:', error);
         process.exit(1);
     }
 };

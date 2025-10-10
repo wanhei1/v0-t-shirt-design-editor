@@ -68,6 +68,23 @@ export interface QueueResponse {
   number: number
 }
 
+export interface SimpleHistoryItem {
+  outputs: Record<string, {
+    images?: Array<{
+      filename: string
+      subfolder: string
+      type: string
+    }>
+  }>
+  status: {
+    status_str: string
+    completed: boolean
+    messages: string[]
+  }
+}
+
+export type HistoryResponse = Record<string, SimpleHistoryItem>
+
 export class SimpleComfyUIClient {
   private serverUrl: string
 
@@ -182,20 +199,20 @@ export class SimpleComfyUIClient {
       throw new Error(`ComfyUI 请求失败: ${response.status} ${response.statusText}`)
     }
 
-    return response.json()
+  return response.json() as Promise<QueueResponse>
   }
 
   /**
    * 获取历史记录
    */
-  async getHistory(promptId: string): Promise<any> {
+  async getHistory(promptId: string): Promise<HistoryResponse> {
     const response = await fetch(`${this.serverUrl}/history/${promptId}`)
     
     if (!response.ok) {
       throw new Error(`获取历史记录失败: ${response.status}`)
     }
 
-    return response.json()
+    return response.json() as Promise<HistoryResponse>
   }
 
   /**

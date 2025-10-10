@@ -24,7 +24,7 @@ export interface GenerationParams {
 }
 
 export interface WorkflowNode {
-  inputs: Record<string, any>
+  inputs: Record<string, unknown>
   class_type: string
 }
 
@@ -35,7 +35,7 @@ export interface Workflow {
 export interface QueueResponse {
   prompt_id: string
   number: number
-  node_errors?: Record<string, any>
+  node_errors?: Record<string, unknown>
 }
 
 export interface HistoryItem {
@@ -125,8 +125,8 @@ export class ComfyUIAPI {
    * 获取队列状态
    */
   async getQueue(): Promise<{
-    queue_running: any[]
-    queue_pending: any[]
+    queue_running: unknown[]
+    queue_pending: unknown[]
   }> {
     const response = await fetch(`http://${this.serverAddress}/queue`)
 
@@ -318,13 +318,16 @@ export class SimpleComfyUIClient {
           imageInfo.type
         )
 
+        const workflowSeed = workflow["3"]?.inputs?.seed
+        const workflowSteps = workflow["3"]?.inputs?.steps
+
         return {
           imageBuffer,
           filename: imageInfo.filename,
           metadata: {
             prompt: params.prompt,
-            seed: workflow["3"].inputs.seed,
-            steps: workflow["3"].inputs.steps
+            seed: typeof workflowSeed === 'number' ? workflowSeed : params.seed ?? 0,
+            steps: typeof workflowSteps === 'number' ? workflowSteps : params.steps ?? 0,
           }
         }
       }

@@ -1,3 +1,5 @@
+import type { AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/auth';
+
 // API 客户端配置
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
@@ -47,23 +49,15 @@ class ApiClient {
   }
 
   // 认证相关
-  async register(userData: {
-    username: string;
-    email: string;
-    password: string;
-  }) {
-    return this.request('/api/register', {
+  async register(userData: RegisterRequest) {
+    return this.request<AuthResponse>('/api/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   }
 
-  async login(credentials: { email: string; password: string }) {
-    const response = await this.request<{
-      token: string;
-      user: any;
-      message: string;
-    }>('/api/login', {
+  async login(credentials: LoginRequest) {
+    const response = await this.request<AuthResponse>('/api/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -77,7 +71,7 @@ class ApiClient {
   }
 
   async getProfile() {
-    return this.request('/api/profile', {
+    return this.request<User>('/api/profile', {
       method: 'GET',
     });
   }
@@ -102,10 +96,13 @@ class ApiClient {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      const data = await response.json();
+      const data = (await response.json()) as Record<string, unknown>;
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : '连接失败' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '连接失败',
+      };
     }
   }
 }
