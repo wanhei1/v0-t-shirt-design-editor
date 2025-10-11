@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { ApiError } from "@/lib/auth-api";
 
 const loginSchema = z.object({
   email: z.string().email("请输入有效的邮箱地址"),
@@ -34,6 +35,7 @@ interface LoginFormProps {
 export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string[]>([]);
   const { login, isLoading } = useAuth();
   const { translate } = useLanguage();
 
@@ -48,13 +50,29 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setError(null);
+      setErrorDetails([]);
       await login(data.email, data.password);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : translate({ zh: "登录失败，请重试", en: "Login failed, please try again" })
-      );
+      if (err instanceof ApiError) {
+        setError(err.message);
+        const details: string[] = [];
+        details.push(`错误类型: ${err.type}`);
+        details.push(`接口地址: ${err.endpoint}`);
+        if (typeof err.status !== "undefined") {
+          details.push(`HTTP 状态: ${err.status}${err.statusText ? ` ${err.statusText}` : ""}`);
+        }
+        if (err.serverBody) {
+          details.push(`服务器返回: ${err.serverBody}`);
+        }
+        setErrorDetails(details);
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : translate({ zh: "登录失败，请重试", en: "Login failed, please try again" })
+        );
+        setErrorDetails([]);
+      }
     }
   };
 
@@ -72,7 +90,14 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         <CardContent className="space-y-4">
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="space-y-1">
+                <p>{error}</p>
+                {errorDetails.map((line) => (
+                  <p key={line} className="text-xs text-muted-foreground break-all">
+                    {line}
+                  </p>
+                ))}
+              </AlertDescription>
             </Alert>
           )}
 

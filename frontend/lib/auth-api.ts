@@ -1,6 +1,40 @@
 // 简单的API客户端，包含认证处理
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
+type ApiErrorType = 'network' | 'http' | 'invalid-response';
+
+interface ApiErrorDetail {
+  type: ApiErrorType;
+  endpoint: string;
+  status?: number;
+  statusText?: string;
+  serverBody?: string;
+  cause?: unknown;
+}
+
+export class ApiError extends Error {
+  readonly type: ApiErrorType;
+  readonly endpoint: string;
+  readonly status?: number;
+  readonly statusText?: string;
+  readonly serverBody?: string;
+
+  constructor(message: string, detail: ApiErrorDetail) {
+    super(message);
+    this.name = 'ApiError';
+    this.type = detail.type;
+    this.endpoint = detail.endpoint;
+    this.status = detail.status;
+    this.statusText = detail.statusText;
+    this.serverBody = detail.serverBody;
+
+    // 保留原始错误堆栈，方便调试
+    if (detail.cause instanceof Error && detail.cause.stack) {
+      this.stack = `${this.stack}\nCaused by: ${detail.cause.stack}`;
+    }
+  }
+}
+
 export interface User {
   id: string;
   username: string;
@@ -52,7 +86,11 @@ class AuthApi {
       });
     } catch (networkError) {
       const message = networkError instanceof Error ? networkError.message : 'Unknown network error';
-      throw new Error(`无法连接到 ${endpoint}: ${message}`);
+      throw new ApiError(`无法连接到 ${endpoint}: ${message}`, {
+        type: 'network',
+        endpoint,
+        cause: networkError,
+      });
     }
 
     const contentType = response.headers.get('content-type') || '';
@@ -74,7 +112,13 @@ class AuthApi {
 
       const statusInfo = `${response.status} ${response.statusText}`.trim();
       const detailSuffix = serverDetails ? ` 服务器返回: ${serverDetails}` : '';
-      throw new Error(`请求 ${endpoint} 失败 (${statusInfo}).${detailSuffix}`);
+      throw new ApiError(`请求 ${endpoint} 失败 (${statusInfo}).${detailSuffix}`, {
+        type: 'http',
+        endpoint,
+        status: response.status,
+        statusText: response.statusText,
+        serverBody: serverDetails,
+      });
     }
 
     if (contentType.includes('application/json')) {
@@ -83,7 +127,12 @@ class AuthApi {
 
     // 非 JSON 响应时提供更易理解的调试信息
     const text = await response.text().catch(() => '');
-    throw new Error(`请求 ${endpoint} 成功但响应不是 JSON（content-type: ${contentType || 'unknown'}）。响应内容: ${text.slice(0, 200)}`);
+    throw new ApiError(`请求 ${endpoint} 成功但响应不是 JSON（content-type: ${contentType || 'unknown'}）。响应内容: ${text.slice(0, 200)}`,
+      {
+        type: 'invalid-response',
+        endpoint,
+        serverBody: text,
+      });
   }
 
   async login(email: string, password: string): Promise<LoginResponse> {
