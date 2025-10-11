@@ -26,6 +26,19 @@ app.get('/', (req, res) => {
     });
 });
 
+// API 根路由提示
+app.get('/api', (req, res) => {
+    res.json({
+        message: 'API online',
+        endpoints: {
+            login: 'POST /api/login',
+            register: 'POST /api/register',
+            profile: 'GET /api/profile',
+            health: 'GET /health'
+        }
+    });
+});
+
 // API 状态路由
 app.get('/health', (req, res) => {
     res.json({

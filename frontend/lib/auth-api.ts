@@ -42,17 +42,48 @@ class AuthApi {
       headers.set('Authorization', `Bearer ${this.authToken}`);
     }
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      ...options,
-      headers,
-    });
+    const endpoint = `${API_BASE_URL}${url}`;
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Request failed');
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        ...options,
+        headers,
+      });
+    } catch (networkError) {
+      const message = networkError instanceof Error ? networkError.message : 'Unknown network error';
+      throw new Error(`无法连接到 ${endpoint}: ${message}`);
     }
 
-    return response.json();
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!response.ok) {
+      let serverDetails = '';
+
+      if (contentType.includes('application/json')) {
+        const errorBody = await response.json().catch(() => null);
+        if (errorBody && typeof errorBody === 'object') {
+          serverDetails = JSON.stringify(errorBody);
+        }
+      } else {
+        const text = await response.text().catch(() => '');
+        if (text) {
+          serverDetails = text.length > 500 ? `${text.slice(0, 500)}...` : text;
+        }
+      }
+
+      const statusInfo = `${response.status} ${response.statusText}`.trim();
+      const detailSuffix = serverDetails ? ` 服务器返回: ${serverDetails}` : '';
+      throw new Error(`请求 ${endpoint} 失败 (${statusInfo}).${detailSuffix}`);
+    }
+
+    if (contentType.includes('application/json')) {
+      return response.json();
+    }
+
+    // 非 JSON 响应时提供更易理解的调试信息
+    const text = await response.text().catch(() => '');
+    throw new Error(`请求 ${endpoint} 成功但响应不是 JSON（content-type: ${contentType || 'unknown'}）。响应内容: ${text.slice(0, 200)}`);
   }
 
   async login(email: string, password: string): Promise<LoginResponse> {
