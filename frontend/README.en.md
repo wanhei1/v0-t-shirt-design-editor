@@ -41,7 +41,7 @@ Create `frontend/.env.local` (ignored by git) and configure:
 
 ```dotenv
 # Base URL for the backend API
-NEXT_PUBLIC_API_URL=http://localhost:3002
+NEXT_PUBLIC_API_URL=http://localhost:8189
 ```
 
 If you deploy the backend elsewhere, update this URL accordingly.

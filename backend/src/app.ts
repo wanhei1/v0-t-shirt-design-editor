@@ -8,11 +8,17 @@ import './types'; // 导入类型扩展
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001; // 改为 3001，避免与前端冲突
+const PORT = process.env.PORT || 8189; // 默认使用 8189 端口
 
 // 中间件
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // 允许前端访问
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'https://www.bit810.cn',
+        /https:\/\/.*\.vercel\.app$/  // 允许所有 Vercel 部署域名
+    ],
     credentials: true
 }));
 app.use(express.json());

@@ -1,7 +1,7 @@
 // 简单的API客户端，包含认证处理
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://api.bit810.cn/api' : 'http://localhost:3002/api');
+  (process.env.NODE_ENV === 'production' ? 'http://82.157.19.21:8189/api' : 'http://localhost:8189/api');
 
 type ApiErrorType = 'network' | 'http' | 'invalid-response';
 

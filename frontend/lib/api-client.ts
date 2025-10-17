@@ -3,7 +3,7 @@ import type { AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/
 // API 客户端配置
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://api.bit810.cn' : 'http://localhost:3002');
+  (process.env.NODE_ENV === 'production' ? 'http://82.157.19.21:8189' : 'http://localhost:8189');
 
 class ApiClient {
   private baseURL: string;

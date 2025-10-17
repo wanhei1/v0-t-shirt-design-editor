@@ -43,7 +43,7 @@ frontend/
 
 ```dotenv
 # 后端 API 基础地址
-NEXT_PUBLIC_API_URL=http://localhost:3002
+NEXT_PUBLIC_API_URL=http://localhost:8189
 ```
 
 如果后端部署在其他域名或端口，请同步更新该值。
