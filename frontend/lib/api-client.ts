@@ -92,8 +92,12 @@ class ApiClient {
   // 测试连接
   async testConnection() {
     try {
-      // 直接调用后端的健康检查端点，不加/api前缀
-      const healthUrl = this.baseURL.replace('/api', '') + '/health';
+      // 直接调用后端的健康检查端点
+      // baseURL 可能是 http://localhost:8189 或 http://localhost:8189/api
+      const healthUrl = this.baseURL.includes('/api') 
+        ? this.baseURL.replace('/api', '/health')
+        : `${this.baseURL}/health`;
+      
       const response = await fetch(healthUrl);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
