@@ -111,6 +111,102 @@ class ApiClient {
       };
     }
   }
+
+  // 通用 GET 请求
+  async get<T>(endpoint: string) {
+    return this.request<T>(`/api${endpoint}`, {
+      method: 'GET',
+    });
+  }
+
+  // 通用 POST 请求
+  async post<T>(endpoint: string, data?: unknown) {
+    return this.request<T>(`/api${endpoint}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // 通用 PATCH 请求
+  async patch<T>(endpoint: string, data?: unknown) {
+    return this.request<T>(`/api${endpoint}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // 通用 DELETE 请求
+  async delete<T>(endpoint: string) {
+    return this.request<T>(`/api${endpoint}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============ 产品相关 ============
+  async getProducts() {
+    return this.get('/products');
+  }
+
+  async getProductVariants(productId: string, color: string, gender: string) {
+    return this.get(`/products/${productId}/variants?color=${color}&gender=${gender}`);
+  }
+
+  // ============ 设计相关 ============
+  async createDesign(designData: unknown) {
+    return this.post('/designs', designData);
+  }
+
+  async getUserDesigns() {
+    return this.get('/designs');
+  }
+
+  async publishDesign(designId: string) {
+    return this.patch(`/designs/${designId}/publish`, {});
+  }
+
+  async getDesignGallery(limit: number = 20, offset: number = 0) {
+    return this.get(`/gallery?limit=${limit}&offset=${offset}`);
+  }
+
+  async getAuthorDesigns(authorId: string) {
+    return this.get(`/authors/${authorId}`);
+  }
+
+  // ============ 订单相关 ============
+  async createOrder(orderData: unknown) {
+    return this.post('/orders', orderData);
+  }
+
+  async getUserOrders() {
+    return this.get('/orders');
+  }
+
+  async payOrder(orderId: string, transactionId: string) {
+    return this.post(`/orders/${orderId}/pay`, { transactionId });
+  }
+
+  // ============ 会员相关 ============
+  async purchaseMembership(membershipType: string) {
+    return this.post('/membership/purchase', { membershipType });
+  }
+
+  async getMembershipStatus() {
+    return this.get('/membership/status');
+  }
+
+  // ============ 推荐相关 ============
+  async generateReferralCode() {
+    return this.post('/referral/generate', {});
+  }
+
+  async applyReferralCode(code: string) {
+    return this.post('/referral/apply', { code });
+  }
+
+  // ============ 收益相关 ============
+  async getEarnings() {
+    return this.get('/earnings');
+  }
 }
 
 // 导出单例实例
